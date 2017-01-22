@@ -60,6 +60,8 @@ shinyUI(fluidPage(
     leafletOutput("mymap")
   ),
   
+  checkboxInput("showCurrent", "Aktuell", value = FALSE),
+  
   tags$footer(id="footer", tags$p("© FZI Seminar - Gruppe 3"))
   
 ))
