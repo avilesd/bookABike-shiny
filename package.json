@@ -1,0 +1,35 @@
+{
+  "name": "data-science-seminar-3",
+  "version": "0.0.0",
+  "description": "Initial code for Zwischenpraesentation",
+  "main": "server.js",
+  "dependencies": {
+    "body-parser": "^1.4.3",
+    "express": "^4.4.5",
+    "chokidar": "^1.6.1",
+    "socket.io": "^1.4.6"
+  },
+  "devDependencies": {},
+  "config": {
+    "port" : "3000"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "keywords": [
+    "data-science",
+    "prototype",
+    "tutorial",
+    "comment",
+    "example"
+  ],
+  "author": "Aviles, Blanck, Schueler, Villarreal, Zaytoun",
+  "engines": {
+    "node": "4.2.0"
+  }
+}

@@ -1,0 +1,131 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <link rel="stylesheet" href="css/bootstrap-datetimepicker.min.css">
+        <style>
+            body {
+                padding-top: 50px;
+                padding-bottom: 20px;
+            }
+        </style>
+        <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+        <link rel="stylesheet" href="css/main.css">
+
+        <script src="js/vendor/modernizr-2.8.3.min.js"></script>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.js"></script>
+        <script src="js/vendor/bootstrap-datetimepicker.min.js"></script>
+        <script>
+        // ToDo from Form to URL to Google API Call
+        var urlLocation;
+
+          function cityToCode() {
+            var myInput = $('#anfangsort').val();
+            var timepoint = $('.timepoint').val();  
+            var replaced = myInput.replace(/ /g,"+");
+            
+            localStorage.setItem("location", myInput);
+            localStorage.setItem("time", timepoint);
+            $('#anfangsort').val('');
+            urlLocation = "https://maps.googleapis.com/maps/api/geocode/json?address="+replaced+"&key=AIzaSyCppLRUUBWzdQPCpNmkyvDjLXeV2KV32RI";
+            getLatLong();
+
+            console.log(urlLocation);
+            console.log(myInput);
+            console.log(replaced);
+            console.log(timepoint);
+          };
+
+          function getLatLong() {
+            var page_content;
+              $.get(urlLocation
+                , function(data){
+                  page_content = data;
+                  var lat = page_content.results[0].geometry.location.lat;
+                  var lng = page_content.results[0].geometry.location.lng;
+                  console.log(page_content);
+                  localStorage.setItem("lat", lat);
+                  console.log(lat);
+                  localStorage.setItem("lng", lng);
+                  console.log(lng);
+                  window.location.href = "/booking.html";
+              });
+          };
+
+        </script>
+    </head>
+    <body>
+        <!--[if lt IE 8]>
+            <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Book a Bike</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+        
+        </div><!--/.navbar-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+      <!-- Example row of columns -->
+      <div class="row">
+        <div class="col-xs-12">
+          <form class="form-horizontal">
+            <fieldset>
+
+            <!-- Form Name -->
+            <legend style="padding-top: 15px;">Reiseauskunft</legend>
+
+            <!-- Text input-->
+            <div class="form-group">
+              <label class="col-xs-12 control-label" for="Anfangsort">Anfangsort</label>  
+              <div class="col-xs-12">
+              <input id="anfangsort" name="Anfangsort" type="text" placeholder="Karlsruhe Hbf" class="form-control input-md" required />
+              </div>
+              <label class="col-xs-12 control-label" for="Anfangsort" style="padding-top: 15px;">Datum &amp;Uhrzeit</label>  
+              <div class="col-xs-12">
+                <input id="date-picker" size="16" type="text" value="2016-12-07 15:30" readonly class="form-control timepoint form_datetime" />
+              </div>
+              <div class="col-xs-12 form-wrapper">
+                <div onclick="cityToCode()" class="btn btn-success pull-right">
+                  Suchen
+                </div>
+              </div>
+            </div>
+            </fieldset>
+          </form>
+
+        </div>
+ 
+        <script type="text/javascript">
+            $(".form_datetime").datetimepicker({format: 'yyyy-mm-dd hh:ii'});
+        </script> 
+      </div>
+
+      <hr>
+
+      <footer>
+        <p>&copy; FZI Seminar - Gruppe 3</p>
+      </footer>
+    </div> <!-- /container -->        
+        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.11.2.js"><\/script>')</script>
+        <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+        <script src="js/vendor/bootstrap.min.js"></script>
+        <script src="js/main.js"></script>
+    </body>
+</html>
