@@ -57,10 +57,11 @@ shinyServer(function(input, output) {
 
         # Use httr-package to ask for Call-a-bike realtime data (CAB-API)
         
-        apikey <- "Bearer 05fb7a3fb8c904a3945176880ae31dfa"
+        # Key used in application is stored locally for security purposes
+        apikey <- Sys.getenv("CALLABIKE_API")
         customRadius <- 500
-        customLimit = 40
-        providerNetwork = 2 # tell API to use Call-a-bike Network
+        customLimit <- 50
+        providerNetwork <- 2 # tell API to use Call-a-bike Network
         
         getResults <- GET("https://api.deutschebahn.com/flinkster-api-ng/v1/bookingproposals", 
                        query = list(lat = lat, lon = lon, radius= customRadius, 
