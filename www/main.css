@@ -164,3 +164,6 @@
 .leaflet-container a.leaflet-popup-close-button{
   color: white;
 }
+.navbar-toggle {
+  display: none;
+}
