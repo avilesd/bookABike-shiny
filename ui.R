@@ -44,8 +44,12 @@ shinyUI(fluidPage(
   
   tags$div(id="removeDiv",
     fluidRow(
-      column(12, 
-      textInput("anfangsort", "Anfangsort", value = "", placeholder = "Koenigsstrasse 10, Stuttgart")
+      column(6, 
+        textInput("strasse", "Strasse & Strassennr.", value = "", placeholder = "Koenigsstrasse 1")
+      ),
+      column(6, 
+             selectInput("stadt", "Stadt", c("Stuttgart" = "Stuttgart", "Hamburg" = "Hamburg"), selected = "Stuttgart")
+             #textInput("stadt", "Stadt", value = "", placeholder = " Stuttgart")
       ),
       column(12,
         HTML("<label class='col-xs-12 control-label' for='date-picker' style='padding-top: 15px;'>Datum &amp;Uhrzeit</label>

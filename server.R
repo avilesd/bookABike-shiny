@@ -4,7 +4,8 @@ library(leaflet)
 library(ggmap)
 library(httr)
 
-geocode("Koenigsstrasse 10, Stuttgart, Germany")
+# Import functions from other files if needed
+if(!exists("locationToBikes", mode="function")) source("locationToNumberOfBikes.R")
 
 # Load rentalZones for lat and lon data
 rentalZones <- read.csv2("/home/ubuntu/RENTAL_ZONE.csv", sep=";")
@@ -14,8 +15,16 @@ stations <- stations[stations$RENTAL_ZONE_X_COORDINATE!=0,]
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
   
+  #anfangsort <- paste(input$strasse, input$stadt, "Germany", sep = ",")
+  #print(anfangsort)
+  
+  pasteHelp <- function(street, city) {
+    anfangsort <- paste(input$strasse, input$stadt, "Germany", sep = ",")
+    anfangsort
+  }
+  
   output$output1 <- renderText({ 
-    paste("For DEV - Anfangsort:", input$anfangsort)
+    paste("For DEV - Anfangsort:", pasteHelp(input$strasse, input$stadt))
   })
   
   output$output2 <- renderText({ 
@@ -28,7 +37,7 @@ shinyServer(function(input, output) {
   observeEvent(input$showApp, {
     output$mymap <- renderLeaflet({
       result = tryCatch({
-        lonLat <- geocode(input$anfangsort)
+        lonLat <- geocode(pasteHelp(input$strasse, input$stadt))
         TRUE
       }, warning = function(w) {
         print("Warning catched: Please make sure the user inserts a valid location.")
@@ -47,42 +56,16 @@ shinyServer(function(input, output) {
       # Run only if input from 'Anfgansort' is valid, i.e. if geocode(...) was successful
       if (result){
         removeClass(selector = "#mymap", class = "hidden")
-        addClass(selector = "input", class = "disable")
-        show(selector = "#hiddenDiv") 
+        #show(selector = "#hiddenDiv") 
         
         lon <- lonLat[1]
         lat <- lonLat[2]
         print(lon)
         print(lat)
-
-        # Use httr-package to ask for Call-a-bike realtime data (CAB-API)
         
-        # Key used in application is stored locally for security purposes
-        apikey <- Sys.getenv("CALLABIKE_API")
-        customRadius <- 500
-        customLimit <- 50
-        providerNetwork <- 2 # tell API to use Call-a-bike Network
-        
-        getResults <- GET("https://api.deutschebahn.com/flinkster-api-ng/v1/bookingproposals", 
-                       query = list(lat = lat, lon = lon, radius= customRadius, 
-                                 limit = customLimit, providernetwork = providerNetwork),
-                       , add_headers(Accept = "application/json", Authorization = apikey))
-        
-        #Use this for development only
-        #getResults <- GET("https://api.deutschebahn.com/flinkster-api-ng/v1/bookingproposals?lat=48.7821547&lon=9.1821333&radius=500&limit=40&providernetwork=2", add_headers(Accept = "application/json", Authorization = "Bearer 05fb7a3fb8c904a3945176880ae31dfa"))
-        getContent <- content(getResults) # content function will try to parse to R object
-        
-        # Get latitude-frequency from each bike-item (effectively how many bikes in each latitude)
-        # The second line does the same for the latitude
-        listLonLat <- lapply(getContent$items, function(listElement) unlist(listElement$position$coordinates))
-        listLonLat <- lapply(listLonLat, as.character)
-        bikesProStation <- as.data.frame(table(unlist(lapply(listLonLat, function(vec) paste(vec[2], vec[1],sep="---")))))
-        tableLonLat <- t(as.data.frame(apply(bikesProStation[1], 1, strsplit, "---")))
-        finalTable <- cbind(tableLonLat, bikesProStation[2])
-        print(finalTable)
-        finalLat <- as.numeric(as.matrix(finalTable[1]))
-        finalLon <- as.numeric(as.matrix(finalTable[2]))
-        finalFreq <- as.numeric(as.matrix(finalTable[3]))
+        finalLat <-  resultList$finalLat
+        finalLon <-  resultList$finalLon
+        finalFreq <- resultList$finalFreq
         
         # We use 'leafletProxy' to change the Layers on the map without rerendering
         if(input$showCurrent) {
@@ -101,7 +84,7 @@ shinyServer(function(input, output) {
         #
         
         logoPath = 'location-pointer.png'
-        leaflet(data = stations[stations$CITY=="Stuttgart",]) %>% addTiles() %>%
+        leaflet(data = stations[stations$CITY==input$stadt,]) %>% addTiles() %>%
           addMarkers(as.numeric(lon) , as.numeric(lat), icon = list(
             iconUrl = logoPath, iconSize = c(30, 50)
           )) %>%
