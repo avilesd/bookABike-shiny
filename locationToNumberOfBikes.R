@@ -47,3 +47,18 @@ locationToBikes <- function(latitude, longitude) {
   result
 }
 
+triangulateLocation <-function (latitude, longitude) {
+  # Call locationBikes with original coordinates
+  mainLocation <- locationToBikes(latitude, longitude)
+  
+  # Call locationBikes with coordinates slightly positively moved
+  positiveMain <- locationToBikes(latitude + 0.002, longitude + 0.002)
+  
+  # Call locationBikes with coordinates slightly positively moved
+  negativeMain <- locationToBikes(latitude - 0.002, longitude - 0.002)
+  
+  print(mainLocation)
+  print(positiveMain)
+  print(negativeMain)
+}
+

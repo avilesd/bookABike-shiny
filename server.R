@@ -6,6 +6,7 @@ library(httr)
 
 # Import functions from other files if needed
 if(!exists("locationToBikes", mode="function")) source("locationToNumberOfBikes.R")
+if(!exists("triangulateLocation", mode="function")) source("locationToNumberOfBikes.R")
 
 # Load rentalZones for lat and lon data
 rentalZones <- read.csv2("/home/ubuntu/RENTAL_ZONE.csv", sep=";")
@@ -62,7 +63,11 @@ shinyServer(function(input, output) {
         lat <- lonLat[2]
         print(lon)
         print(lat)
+        print(lon + 0.002)
         
+        triangulateLocation(lat, lon)
+        
+        resultList <- locationToBikes(lat, lon)
         finalLat <-  resultList$finalLat
         finalLon <-  resultList$finalLon
         finalFreq <- resultList$finalFreq
