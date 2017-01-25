@@ -40,11 +40,11 @@ locationToBikes <- function(latitude, longitude) {
   tableLonLat <- t(as.data.frame(apply(bikesProStation[1], 1, strsplit, "---")))
   finalTable <- cbind(tableLonLat, bikesProStation[2])
   print(finalTable)
-  finalLat <- as.numeric(as.matrix(finalTable[1]))
-  finalLon <- as.numeric(as.matrix(finalTable[2]))
-  finalFreq <- as.numeric(as.matrix(finalTable[3]))
-  result <- list(finalLat = finalLat, finalLon = finalLon, finalFreq = finalFreq)
-  result
+  #finalLat <- as.numeric(as.matrix(finalTable[1]))
+  #finalLon <- as.numeric(as.matrix(finalTable[2]))
+  #finalFreq <- as.numeric(as.matrix(finalTable[3]))
+  #result <- list(finalLat = finalLat, finalLon = finalLon, finalFreq = finalFreq)
+  result <- finalTable
 }
 
 triangulateLocation <-function (latitude, longitude) {
@@ -57,8 +57,8 @@ triangulateLocation <-function (latitude, longitude) {
   # Call locationBikes with coordinates slightly positively moved
   negativeMain <- locationToBikes(latitude - 0.002, longitude - 0.002)
   
-  print(mainLocation)
-  print(positiveMain)
-  print(negativeMain)
+  print(class(mainLocation))
+  print(class(positiveMain))
+  print(class(negativeMain))
 }
 
