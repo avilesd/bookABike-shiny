@@ -3,7 +3,6 @@ library(shinyjs)
 library(leaflet)
 library(ggmap)
 library(httr)
-library(tidyr)
 
 # Import functions from other files if needed
 #source("locationToNumberOfBikes.R")
@@ -147,7 +146,7 @@ shinyServer(function(input, output) {
         print(lon)
         print(lat)
         
-        triangulateLocation(48.78215, 9.182133)
+        triangulateLocation(lat, lon)
         
         resultList <- locationToBikes(lat, lon)
         finalLat <-  resultList$finalLat
