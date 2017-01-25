@@ -28,15 +28,17 @@ library(httr)
 #' @return a normalized matrix
 #' @export
 
-locationToBikes <- function(latitude, longitude) {
+locationToBikes <- function(latitude, longitude, inputTime) {
   # Key used in application is stored locally for security purposes
   apikey <- Sys.getenv("CALLABIKE_API")
-  customRadius <- 600
+  customRadius <- 700
   customLimit <- 50
+  begin <- as.character(inputTime)
+  
   providerNetwork <- 2 # tell API to use Call-a-bike Network
   
   getResults <- GET("https://api.deutschebahn.com/flinkster-api-ng/v1/bookingproposals", 
-                    query = list(lat = latitude, lon = longitude, radius= customRadius, 
+                    query = list(lat = latitude, lon = longitude, radius= customRadius, begin=begin,
                                  limit = customLimit, providernetwork = providerNetwork),
                     , add_headers(Accept = "application/json", Authorization = apikey))
   # Get parsed JSON content
@@ -54,18 +56,23 @@ locationToBikes <- function(latitude, longitude) {
   #finalLon <- as.numeric(as.matrix(finalTable[2]))
   #finalFreq <- as.numeric(as.matrix(finalTable[3]))
   #result <- list(finalLat = finalLat, finalLon = finalLon, finalFreq = finalFreq)
+  print(getContent$size)
   result <- finalTable
 }
 
-triangulateLocation <- function (latitude, longitude, merge = TRUE) {
+triangulateLocation <- function (latitude, longitude, dateTime, merge = TRUE) {
+  print("TIIIIIIMEEEEEEEEEEEEE")
+  dateTime <- gsub(" ", "T", dateTime)
+  dateTime <- paste(dateTime, "-01:00:00", sep="")
+    print(dateTime)
   # Call locationBikes with original coordinates
-  mainLocation <- locationToBikes(latitude, longitude)
+  mainLocation <- locationToBikes(latitude, longitude, dateTime)
   
   # Call locationBikes with coordinates slightly positively moved
-  positiveMain <- locationToBikes(latitude + 0.002, longitude + 0.002)
+  positiveMain <- locationToBikes(latitude + 0.002, longitude + 0.002, dateTime)
   
   # Call locationBikes with coordinates slightly positively moved
-  negativeMain <- locationToBikes(latitude - 0.002, longitude - 0.002)
+  negativeMain <- locationToBikes(latitude - 0.002, longitude - 0.002, dateTime)
   
   if (merge) {
     df3 <- merge(mainLocation, positiveMain, by.x=c("1", "2"), by.y=c("1", "2"), all.x = T)
@@ -82,8 +89,6 @@ triangulateLocation <- function (latitude, longitude, merge = TRUE) {
     df4 <- df4[, -c(3,4,5)] 
     df4$"newFreq" <- newCol
   }
-  print("merged----")
-  print(newCol)
   df4
 }
 
@@ -105,14 +110,13 @@ shinyServer(function(input, output) {
     anfangsort <- paste(input$strasse, input$stadt, "Germany", sep = ",")
     anfangsort
   }
-  
-  output$output1 <- renderText({ 
-    paste("For DEV - Anfangsort:", pasteHelp(input$strasse, input$stadt))
-  })
-  
+  print("Input DatePicker")
   output$output2 <- renderText({ 
     paste("For DEV - Date and Time selected:", input$datePicker)
   })
+  
+  #dateValue <- input$datePicker
+  #print(dateValue)
   
   # Listen for 'Button Click Event' and trigger the creation of the leaflet map
   # Also make sure to catch warnings and errors
@@ -138,20 +142,21 @@ shinyServer(function(input, output) {
       
       # Run only if input from 'Anfgansort' is valid, i.e. if geocode(...) was successful
       if (result){
-        removeClass(selector = "#mymap", class = "hidden")
-        #show(selector = "#hiddenDiv") 
+        removeClass(selector = "hiddenDiv", class = "hide")
+        shinyjs::addClass(selector = "hiddenDiv", class = "show")
+        show(selector = "hiddenDiv") 
         
         lon <- lonLat[1]
         lat <- lonLat[2]
         print(lon)
         print(lat)
         
-        triangulateLocation(lat, lon)
+        tripleTable <- triangulateLocation(lat, lon, input$datePicker)
         
-        resultList <- locationToBikes(lat, lon)
-        finalLat <-  resultList$finalLat
-        finalLon <-  resultList$finalLon
-        finalFreq <- resultList$finalFreq
+        #resultList <- locationToBikes(lat, lon)
+        finalLat  <- as.numeric(as.vector(tripleTable[, 1])) #resultList$finalLat
+        finalLon  <- as.numeric(as.vector(tripleTable[, 2])) #resultList$finalLon
+        finalFreq <- as.numeric(as.vector(tripleTable[, 3])) #resultList$finalFreq
         
         # We use 'leafletProxy' to change the Layers on the map without rerendering
         if(input$showCurrent) {

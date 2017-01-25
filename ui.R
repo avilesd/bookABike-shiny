@@ -14,13 +14,13 @@ shinyUI(fluidPage(
   
   HTML("<script type='text/javascript'>
         $( document ).ready(function() {
-         $('.form_datetime').datetimepicker({format: 'yyyy-mm-dd hh:ii'});
+         $('#datePicker').datetimepicker({format: 'yyyy-mm-dd hh:ii'});
         });
        </script>"),
   
   # Navigation Bar
   HTML("<nav class='navbar navbar-inverse navbar-fixed-top' role='navigation'>
-      <div class='container'>
+      <div class=''>
         <div class='navbar-header'>
           <button type='button' class='navbar-toggle collapsed' data-toggle='collapse' data-target='#navbar' aria-expanded='false' aria-controls='navbar'>
        <span class='sr-only'>Toggle navigation</span>
@@ -36,7 +36,7 @@ shinyUI(fluidPage(
          </div>
          </nav>"),
   
-  HTML("<legend style='padding-top: 15px;'>Reiseauskunft</legend>"),
+  HTML("<legend style='padding-top: 5px;'>Reiseauskunft</legend>"),
   
   # 
   # Here does the actual application begin
@@ -52,19 +52,18 @@ shinyUI(fluidPage(
              #textInput("stadt", "Stadt", value = "", placeholder = " Stuttgart")
       ),
       column(12,
-        HTML("<label class='col-xs-12 control-label' for='date-picker' style='padding-top: 15px;'>Datum &amp;Uhrzeit</label>
-        <input label='Datum & Uhrzeit' id='datePicker' size='16' type='text' value='2016-12-07 15:30' class='form-control timepoint form_datetime' />")
+        textInput("datePicker", "Datum & Uhrzeit", value = Sys.time()),
+        textOutput("output2"),
+        
+        actionButton("showApp", "Suchen", class="pull-right"),
+        leafletOutput("mymap")
       )
-    ),
-    
-    textOutput( "output1"),
-    textOutput("output2"),
-    
-    actionButton("showApp", "Suchen", class="pull-right"),
-    leafletOutput("mymap")
+    )
   ),
   
-  checkboxInput("showCurrent", "Aktuell", value = FALSE),
+  tags$div(id="hiddenDiv",
+    checkboxInput("showCurrent", "Aktuell", value = FALSE)
+  ),
   
   tags$footer(id="footer", tags$p("© FZI Seminar - Gruppe 3"))
   
