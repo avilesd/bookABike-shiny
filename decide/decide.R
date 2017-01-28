@@ -4,7 +4,29 @@ stuttgartChange <- read.csv("/home/r/R/StuttgartVeränderung.csv", sep=",", stri
 # Convert timestamp to day of week, hourStart, length & class -> cut from table
 
 wday <- function(x) as.POSIXlt(x)$wday
-
+geocodeToNearestStations <- function (lat, lon, resultType = "stations", radius=1000, limit=5, providerNetwork = 2) {
+  apikey <- Sys.getenv("CALLABIKE_API")
+  
+  getResults <- GET("https://api.deutschebahn.com/flinkster-api-ng/v1/areas", 
+                    query = list(lat = lat, lon = lon, radius= radius,
+                                 limit = limit, providernetwork = providerNetwork),
+                    , add_headers(Accept = "application/json", Authorization = apikey))
+  # Get parsed JSON content
+  getContent <- content(getResults) # content function will try to parse to R object
+  
+  if (resultType!="stations") {
+    lonLat <- lapply(getContent$items, function(listElement) unlist(listElement$geometry$position$coordinates))
+    lonLat <- lapply(lonLat, as.character)
+    colNames <- paste("station" , 1:getContent$limit, sep="")
+    result <- as.data.frame(test, col.names = colNames, row.names = c("lon", "lat")) 
+  }
+  else {
+    stationNames <- lapply(getContent$items, function(listElement) unlist(listElement$name))
+    colNames2 <- paste("station" , 1:getContent$limit, sep="")
+    result <- as.data.frame(stationNames, col.names = colNames2, row.names = "STATIONS")
+  }
+  result
+}
 timeToDayAndHour <- function(timestamp) {
   # Get weekday from inputed timestamp & hour
   dateTime <- strsplit(as.character(timestamp), " ")
@@ -16,6 +38,9 @@ timeToDayAndHour <- function(timestamp) {
   time <- timeHour[[1]][1]
   data.frame(weekday, time)
 }
+
+
+
 
 # Cut table according to Class, currenTime, chosenTime & location (St, Ha)
 ##### TODO - REMOVEE DEFAULT FROM OURCLASS & LOCATION ######
@@ -37,7 +62,5 @@ relevantTable <- function(currentTime, chosenTime, city="Stuttgart", ourclass="M
   names(stuttgartChange)
 }
 
-dayToNumber <- function(x) {
-  factor(x, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"), ordered = TRUE)
-}
+
 
