@@ -170,3 +170,14 @@
 .action-button {
   margin:15px 0;
 }
+#radius {
+  display: inline-block;
+  width: auto;
+  vertical-align: middle;
+}
+.parameters-top {
+  padding-top:15px;
+}
+checkbox {
+  margin: 0;
+}

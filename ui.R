@@ -52,8 +52,7 @@ shinyUI(fluidPage(
              #textInput("stadt", "Stadt", value = "", placeholder = " Stuttgart")
       ),
       column(12,
-        textInput("datePicker", "Datum & Uhrzeit", value = Sys.time()),
-        textOutput("output2"),
+        textInput("datePicker", "Datum & Uhrzeit", value = as.character(Sys.time())),
         
         actionButton("showApp", "Suchen", class="pull-right"),
         leafletOutput("mymap")
@@ -61,8 +60,15 @@ shinyUI(fluidPage(
     )
   ),
   
-  tags$div(id="hiddenDiv",
-    checkboxInput("showCurrent", "Aktuell", value = FALSE)
+  tags$div(id="parameters",
+    HTML("<div class='col-xs-12 parameters-top'>"), 
+      HTML("<div class='col-xs-12 col-sm-3'>"), 
+        checkboxInput("showCurrent", "Aktuell", value = FALSE),
+      HTML("</div>"),
+      HTML("<div class='col-xs-12 col-sm-3'>"), 
+        textInput("radius", "Radius", value = 700),
+      HTML("</div>"),
+    HTML("</div>") 
   ),
   
   tags$footer(id="footer", tags$p("© FZI Seminar - Gruppe 3"))
