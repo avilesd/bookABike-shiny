@@ -40,27 +40,78 @@ timeToDayAndHour <- function(timestamp) {
 }
 
 
-
-
 # Cut table according to Class, currenTime, chosenTime & location (St, Ha)
 ##### TODO - REMOVEE DEFAULT FROM OURCLASS & LOCATION ######
 ##### TODO - CHOSE THE RIGHT TABLE #####
-relevantTable <- function(currentTime, chosenTime, city="Stuttgart", ourclass="Monday light rain cold") {
-  if (city=="Stuttgart") {
-    rawTable <- stuttgartChange 
+relevantTable <- function(currentNumberOfBikes, currentTime, chosenTime, reserved = 1, projectedBikes) {
+  disponibility <- 0
+  #changeVector <- 0
+  
+  for (i in 1:length(projectedBikes)) {
+    if (i==1) {
+      help <- currentNumberOfBikes + projectedBikes[i]
+      disponibility[i] <- allowZero(help) 
+      #changeVector[i] <- help 
+    }
+    
+    if (is.na(projectedBikes[i+1])) {
+      break;
+      print("In IFFFFFFF")
+    }
+    
+    disponibility[i+1] <- allowZero(disponibility[i] + projectedBikes[i+1])
+    #changeVector [i+1] <- changeVector[i]    + projectedBikes[i+1]
   }
-  else {
-    rawTable <- hamburgChange
-  }
-  # Cut Table
+  finalCostNR <- sum(sapply(disponibility, costNotToReserve))
+  finalCostR <- sum(sapply(disponibility, costReserve, 1))
+  list(CostNotR = finalCostNR , CostR = finalCostR)
   
-  cityTable <- rawTable[, rawTable=="Monday light rain cold"]
-  stuttgartChange[stuttgartChange$category=="Monday light rain cold", ]
-  
-  
-  
-  names(stuttgartChange)
 }
 
+allowZero <- function(actualValue) {
+  if (actualValue <= 0) {
+    result <- 0
+  }
+  else {
+    result <- actualValue
+  }
+  result
+}
+
+# This functions projects the cost produced to a person (per hour) who
+# comes to a given station to book a bike and there are at least one reserved bike. We use the probability
+# of that person encountering a booked bike and calculate the costs that this creates.
+# That is, a way to measure: what are the repercusions of recommending booking a bike.
+# The cost of not founding a bike are normalized to 1 (K=1).
+#
+# 'currentNumberOfBikes' should be one number not a vector
+costNotToReserve <- function (currentNumberOfBikes, k=1) {
+  if (currentNumberOfBikes==0) {
+    # since we failed to recommend a booking and there are 0 bikes the costs are present
+    costs <- 1*k
+  }
+  else {
+    # means there are bikes to rent, so no costs. That is, the fact that we didn't recommend did not have
+    # repercusions  
+    costs <- 0
+  }
+}
+
+# This functions projects the cost produced to a person (per hour) to whom we explicitly
+# did not recommend to book a bike, but he/she came to a station and found
+# the station empty. The cost of not founding a bike are normalized to 1 (K=1).
+#
+# 'currentNumberOfBikes' should be one number not a vector
+costReserve <- function (currentNumberOfBikes, reserved=1, k=1) {
+  if (currentNumberOfBikes==0) {
+    # since we failed to recommend a booking and there are 0 bikes the costs are present
+    costs <- 1*k
+  }
+  else {
+    # means there are bikes to rent, so no costs. That is, the fact that we didn't recommend did not have
+    # repercusions  
+    costs <- (reserved/currentNumberOfBikes) * k
+  }
+}
 
 

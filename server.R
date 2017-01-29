@@ -43,7 +43,7 @@ shinyServer(function(input, output) {
         need(result, "Die Eingabe 'Anfangsort' ist nicht gültig. Bitte benutzen Sie folgendes Format: Strassenname Nr., Stadt")
       )
       
-      # Run only if input from 'Strasse' & 'Stadt' is valid, i.e. if result exists
+      # Run only if input from 'Anfgansort' is valid, i.e. if geocode(...) was successful
       if (result){
 
         lon <- lonLat[1]
@@ -92,16 +92,15 @@ shinyServer(function(input, output) {
 
 
 
+
+
+
 #' Algortihm for calculating the number of bikes on several stations around
 #' a user-given location
 #'
-#' triangulateLocation : Since the Call-a-bike API limits the number of asked items (read bikes) to 50 pro
+#' Since the Call-a-bike API limits the number of asked items (read bikes) to 50 pro
 #' query, we created a function that makes at least 3 queries to ask around a location
 #' to try to get (altogether) more than just 50 available bikes around a location.
-#' 
-#' locationtoBikes : only cares about the results of the API, so this functios is called
-#' 3 times within triangulateLocation, i.e. the API is called three times. 
-#' 
 #' 
 #' It uses a geocoded location (latitude, longitude) to query real time data from the
 #' CAB-API.
