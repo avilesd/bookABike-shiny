@@ -85,8 +85,11 @@ allowZero <- function(actualValue) {
 # The cost of not founding a bike are normalized to 1 (K=1).
 #
 # 'currentNumberOfBikes' should be one number not a vector
-costNotToReserve <- function (currentNumberOfBikes, k=1) {
-  if (currentNumberOfBikes==0) {
+costNotToReserve <- function (availableBikes, k=1) {
+  print("available")
+  print(availableBikes)
+  print("available---")
+  if (availableBikes==0) {
     # since we failed to recommend a booking and there are 0 bikes the costs are present
     costs <- 1*k
   }
@@ -95,6 +98,7 @@ costNotToReserve <- function (currentNumberOfBikes, k=1) {
     # repercusions  
     costs <- 0
   }
+  costs
 }
 
 # This functions projects the cost produced to a person (per hour) to whom we explicitly
@@ -102,16 +106,46 @@ costNotToReserve <- function (currentNumberOfBikes, k=1) {
 # the station empty. The cost of not founding a bike are normalized to 1 (K=1).
 #
 # 'currentNumberOfBikes' should be one number not a vector
-costReserve <- function (currentNumberOfBikes, reserved=1, k=1) {
-  if (currentNumberOfBikes==0) {
+costReserve <- function (availableBikes, reserved=1, k=1) {
+  actualNumberOfBikes <- availableBikes + reserved
+  if (availableBikes==0) {
     # since we failed to recommend a booking and there are 0 bikes the costs are present
     costs <- 1*k
   }
   else {
     # means there are bikes to rent, so no costs. That is, the fact that we didn't recommend did not have
     # repercusions  
-    costs <- (reserved/currentNumberOfBikes) * k
+    costs <- (reserved/actualNumberOfBikes) * k
   }
+  print(costs)
+  costs
 }
 
+#
+#
+# Input is average change in one station for one forecast-class
+#
+#
+
+change.costNotToReserve <- function (availableBikes, k=1) {
+  
+  if (availableBikes==0) {
+    
+  }
+  else {
+    
+  }
+  costs
+}
+
+costReserve <- function (availableBikes, reserved=1, k=1) {
+  actualNumberOfBikes <- availableBikes + reserved
+  if (availableBikes==0) {
+    # costs <- 1*k
+  }
+  else {
+      # costs <- (reserved/actualNumberOfBikes) * k
+  }
+  costs
+}
 
