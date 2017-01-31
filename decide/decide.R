@@ -1,6 +1,8 @@
 stuttgartChange <- read.csv("/home/r/R/StuttgartVeränderung.csv", sep=",", stringsAsFactors = FALSE, fileEncoding="utf-8")
 #View(stuttgartChange)
 
+
+
 # Convert timestamp to day of week, hourStart, length & class -> cut from table
 
 wday <- function(x) as.POSIXlt(x)$wday
@@ -17,12 +19,12 @@ geocodeToNearestStations <- function (lat, lon, resultType = "stations", radius=
   if (resultType!="stations") {
     lonLat <- lapply(getContent$items, function(listElement) unlist(listElement$geometry$position$coordinates))
     lonLat <- lapply(lonLat, as.character)
-    colNames <- paste("station" , 1:getContent$limit, sep="")
+
     result <- as.data.frame(test, col.names = colNames, row.names = c("lon", "lat")) 
   }
   else {
     stationNames <- lapply(getContent$items, function(listElement) unlist(listElement$name))
-    colNames2 <- paste("station" , 1:getContent$limit, sep="")
+
     result <- as.data.frame(stationNames, col.names = colNames2, row.names = "STATIONS")
   }
   result
@@ -78,11 +80,9 @@ allowZero <- function(actualValue) {
   result
 }
 
-# This functions projects the cost produced to a person (per hour) who
-# comes to a given station to book a bike and there are at least one reserved bike. We use the probability
-# of that person encountering a booked bike and calculate the costs that this creates.
-# That is, a way to measure: what are the repercusions of recommending booking a bike.
-# The cost of not founding a bike are normalized to 1 (K=1).
+# This functions projects the cost produced to a person (per hour) to whom we explicitly
+# did not recommend to book a bike, but he/she came to a station and found
+# the station empty. The cost of not founding a bike are normalized to 1 (K=1).
 #
 # 'currentNumberOfBikes' should be one number not a vector
 costNotToReserve <- function (availableBikes, k=1) {
@@ -101,9 +101,12 @@ costNotToReserve <- function (availableBikes, k=1) {
   costs
 }
 
-# This functions projects the cost produced to a person (per hour) to whom we explicitly
-# did not recommend to book a bike, but he/she came to a station and found
-# the station empty. The cost of not founding a bike are normalized to 1 (K=1).
+
+# This functions projects the cost produced to a person (per hour) who
+# comes to a given station to book a bike and there are at least one reserved bike. We use the probability
+# of that person encountering a booked bike and calculate the costs that this creates.
+# That is, a way to measure: what are the repercusions of recommending booking a bike.
+# The cost of not founding a bike are normalized to 1 (K=1).
 #
 # 'currentNumberOfBikes' should be one number not a vector
 costReserve <- function (availableBikes, reserved=1, k=1) {

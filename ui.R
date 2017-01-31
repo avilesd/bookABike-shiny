@@ -1,6 +1,7 @@
 library(leaflet)
+#library(shinyjs)
 shinyUI(fluidPage(
-  useShinyjs(),  # Include shinyjs
+  #useShinyjs(),  # Include shinyjs
   
   # Application title
   titlePanel("Book a Bike!"),
@@ -14,7 +15,8 @@ shinyUI(fluidPage(
   
   HTML("<script type='text/javascript'>
         $( document ).ready(function() {
-         $('#datePicker').datetimepicker({format: 'yyyy-mm-dd hh:ii'});
+         $('#datePicker').datetimepicker({format: 'yyyy-mm-dd hh:ii', endDate: '+4d',
+        autoclose: true});
         });
        </script>"),
   

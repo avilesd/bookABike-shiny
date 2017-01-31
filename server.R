@@ -19,7 +19,6 @@ shinyServer(function(input, output) {
     anfangsort <- paste(input$strasse, input$stadt, "Germany", sep = ",")
     anfangsort
   }
-  print("Input DatePicker")
   
   # Listen for 'Button Click Event' and trigger the creation of the leaflet map
   # Also make sure to catch warnings and errors
@@ -48,10 +47,8 @@ shinyServer(function(input, output) {
 
         lon <- lonLat[1]
         lat <- lonLat[2]
-        print(lon)
-        print(lat)
         
-        tripleTable <- triangulateLocation(lat, lon, input$datePicker, input$radius)
+        tripleTable <- triangulateLocation(lat, lon, Sys.time(), input$radius)
         
         #resultList <- locationToBikes(lat, lon)
         finalLat  <- as.numeric(as.vector(tripleTable[, 1])) #resultList$finalLat
@@ -79,7 +76,7 @@ shinyServer(function(input, output) {
           addMarkers(as.numeric(lon) , as.numeric(lat), icon = list(
             iconUrl = logoPath, iconSize = c(30, 50)
           )) %>%
-          addMarkers(~RENTAL_ZONE_X_COORDINATE, ~RENTAL_ZONE_Y_COORDINATE,popup = ~as.character(RENTAL_ZONE_HAL_ID)) %>%
+          addMarkers(~RENTAL_ZONE_X_COORDINATE, ~RENTAL_ZONE_Y_COORDINATE,popup = 2) %>%
           setView(lat, lon, zoom = 17)
         
       }
@@ -144,6 +141,8 @@ locationToBikes <- function(latitude, longitude, inputTime, radius) {
 }
 
 triangulateLocation <- function (latitude, longitude, dateTime, radius, merge = TRUE) {
+  print(dateTime)
+  print(as.Date(dateTime))
   dateTime <- gsub(" ", "T", dateTime)
   dateTime <- paste(dateTime, "-01:00:00", sep="")
   print(dateTime)
