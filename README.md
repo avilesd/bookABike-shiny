@@ -11,7 +11,7 @@ calculates a prediction for the number of a bikes on the bike-spots near the giv
 
 After you click on 'Suchen' and the results are shown, you see the recommendation results of our model. You can further click on the blue circles to check the predicted number of available bikes at that station and time. The same goes for the red circles, showing the API real-time results. Furthermore, you can change the search radius and increase or decrease the risiko-aversion.
 
-***Disclaimer:** This is a prototype and a proof of concep, it does not provide any kind of service and it is just intended as a demonstration.
+***Disclaimer:** This is a prototype and a proof of concept, it does not provide any kind of service and it is just intended as a demonstration.
 
 This project was created in the context of a university project [FZI Institute Karlsruhe](http://www.fzi.de/startseite/) in cooperation with the [Mindbox](https://www.mindboxberlin.com/index.php/3rdhackathon.html) from the Deutsche Bahn.
 
