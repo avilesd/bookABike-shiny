@@ -1,7 +1,9 @@
 bookABike-shiny
 ===================
+
 Use the latest version: http://141.52.38.237:8787/p/5020/
 Use the latest stable version: http://141.52.38.237:3838/
+
 ===================
 
 **Scenario:** Imagine you have an important appointment tomorrow morning and your don't want to miss it. Since you know there aren't always bikes available at your nearest bike-sharing spot, you wish you could just book a bike and have the certainty that it will be there tomorrow for you. This app shows a proof of concept, in which users can enter their location and desired time in the future to:
