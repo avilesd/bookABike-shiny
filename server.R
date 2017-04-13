@@ -1,3 +1,4 @@
+#Lade benötigte Pakete
 library(shiny)
 library(shinyjs)
 library(leaflet)
@@ -7,9 +8,7 @@ library(httr)
 # Import functions from other files if needed
 #source("locationToNumberOfBikes.R"
 
-
 # Load rentalZones for lat and lon data
-
 rentalZones <- read.csv2("/srv/shiny-server/RENTAL_ZONE.csv", sep=";")
 stations <- rentalZones[!is.na(rentalZones$RENTAL_ZONE_X_COORDINATE),]
 stations <- stations[stations$RENTAL_ZONE_X_COORDINATE!=0,]
@@ -40,63 +39,14 @@ shinyServer(function(input, output) {
       }, finally = {
         
       })
+      
       shiny::validate(
-        need(result, "Die Eingabe 'Anfangsort' ist nicht gültig. Bitte benutzen Sie folgendes Format: Strassenname Nr., Stadt")
+        need(result, "Die Eingabe 'Strasse & Strassennr.' ist ungültig. Bitte benutzen Sie folgendes Format: Strassenname Nr. ODER maximale API Abrufe pro Minute erreicht, bitte warten Sie eine Minute.")
       )
+      
       # Run only if input from 'Anfgansort' is valid, i.e. if geocode(...) was successful
       if (result){
-        #Lese SVMSpace ein      
-        SVMspace <- read.csv("/srv/shiny-server/StuttgartSVM.csv", sep=",", stringsAsFactors = FALSE, fileEncoding="UTF-8")
         
-        rownames(SVMspace) <- SVMspace$X
-        SVMspace <-  SVMspace[colnames(SVMspace)!="X"]
-        SVMspace <- SVMspace[colnames(SVMspace)!="hour"]
-        #Lege einen Data Frame an für die Klassen
-        categories  <-  as.data.frame(SVMspace[,"category"])
-        colnames(categories) <- "category"
-        #Lösche im SVMRaum das Klassenattribut
-        SVMspace <- SVMspace[colnames(SVMspace)!="category"]
-        #Lösche Schnee, da er kaum auswirkungen hat
-        SVMspace <- SVMspace[colnames(SVMspace)!="SNWD"]
-        
-        #Lese die Veränderungen pro klasse aus
-        deltaClass <- read.csv("/srv/shiny-server/StuttgartVeränderungKlassen.csv", sep=",", stringsAsFactors = FALSE, fileEncoding="UTF-8")
-        deltaClass <- deltaClass[names(deltaClass)!="X"]
-        colnames(deltaClass)[1:(ncol(deltaClass)-1)] <- substring(colnames(deltaClass)[1:(ncol(deltaClass)-1)],2)
-        colnames(deltaClass) <-gsub("\\.", " ", colnames(deltaClass))
-        
-        #Erzeuge url zum Abruf von Wetterdaten
-        url <- "http://api.openweathermap.org/data/2.5/forecast?units=metric&appid=a68fd0d9af55f756ea35eb3f51a4c3b6&q="
-        url <- paste(url,"Stuttgart",sep="") 
-        
-        # Formatiere die Wetterdaten entsprechend
-        # rufe hierbei Wetterdaten als JSON Ojekt ab
-        getContent <- fromJSON(url) # content function will try to parse to R object
-        tmax <- getContent$list$main$temp_max
-        tmin <- getContent$list$main$temp_min
-        tavg <- (tmax-tmin)/2+tmin
-        remove(weatherData)
-        weatherData <- data.frame(matrix(0, ncol = 7,nrow=nrow(getContent$list)))
-        weatherData$X1 <- as.POSIXct(getContent$list$dt_txt)
-        weatherData$X2 <- as.numeric(strftime(weatherData$X1, "%H"))
-        weatherData$X3 <- tmax
-        weatherData$X4 <- tmin
-        weatherData$X5 <- tavg
-        if(length(getContent$list$rain$`3h`)!=0){
-          weatherData$X6 <- getContent$list$rain$`3h`*8
-        }else{
-          weatherData$X6 <- 0
-        }
-        weatherData$X7 <- as.numeric(strftime(weatherData$X1,"%w"))
-        colnames(weatherData)[1] <- "Date"
-        colnames(weatherData)[2] <- "hour"
-        colnames(weatherData)[3:ncol(weatherData)] <- colnames(SVMspace)
-        weatherData$PRCP[is.na(weatherData$PRCP)] <- 0
-        
-        #Erstelle SVM-Model auf Basis der historischen Daten
-        svm.model <- svm(SVMspace, categories[,], kernel="linear")
-        #Klassifiziere aktuelle Wetterdaten
-        svm.pred <-  predict(svm.model, weatherData[,3:ncol(weatherData)])
         lon <- lonLat[1]
         lat <- lonLat[2]
         print(lon)
@@ -122,12 +72,13 @@ shinyServer(function(input, output) {
         else {
           #Berechne die Vorhersage für die verschiednenen Stationen
           for (i in 1:length(finalLat)){
-            deltaPerStationHourly <- getDelta(finalLat[i],finalLon[i], input$datePicker, weatherData, svm.pred, deltaClass)
+            deltaPerStationHourly <- getDelta(finalLat[i],finalLon[i], input$datePicker)
             futureFreqActual <-  futureFreq[i]+sum(deltaPerStationHourly)
             if(futureFreqActual<0){futureFreqActual <- 0}
             futureFreq[i] <- futureFreqActual
             costNotToReserveStation <- costNotToReserve(futureFreqActual)
             costReserveStation <- costReserve(finalFreq[i],deltaPerStationHourly)
+            #Entscheide welche Kostenart höher ist
             if(input$costRatio*costNotToReserveStation>costReserveStation){
               tag <- TRUE
               reserveTagLon <- c(reserveTagLon,finalLon[i])
@@ -171,6 +122,40 @@ shinyServer(function(input, output) {
     
   })
   
+  observeEvent(input$showHelp, {
+    output$helpRadius <- renderText({ 
+      "<div class='help-panel'><span class=''><b>Radius</b>: Der Nutzer kann mit Hilfe eines Schiebereglers den Radius für die Suche anpassen. Eine Änderung des Radius führt dazu, dass nur die Stationen innerhalb dieses Radius angezeigt werden. Einheit: Meter.</span></div>"
+    })
+    output$helpRisiko <- renderText({ 
+      "<div class='help-panel'><span class=''><b>Kostenverhältnis</b>: Dieses Parameter hat lediglich einen Einfluss auf die Entscheidungsfunktion (Simulation), nämlich ob wir eine Empfehlung reservieren oder nicht.
+      Die Kosten ein Fahrrad zu reservieren werden gegen die Kosten ein Fahrrad nicht zu reservieren abgewägt. Ist das Kostenverhältnis größer als 1, sind die Kosten einer Reservierung für diesen hypothetischen Nutzer höher als nicht
+      zu reservieren. D.h. er tendiert nicht zu reservieren und 'erhöht' somit das Risiko kein Fahrrad zu haben. In Kürze: das Parameter wird als die Risikoaversion der Nutzer interpretiert.</span></div>"
+    })
+    output$helpGeneral <- renderText({ 
+      "Kurze Anleitung der App:
+
+Die interaktive Karte zeigt die Anzahl der Call-a-Bike (CAB) Fahrräder in Abhängigkeit des eingegebenen Standortes und des eingegebenen Datums. Die Karte weist folgende Features und Parameter auf:
+<ul><li>Fahrrad-Stationen: Alle offiziellen Fahrrad-Stationen werden für die eingegebene Stadt auf der Karte mit dem Symbol <img style='width:25px' src='station.png' /> dargestellt. Wenn man auf das Symbol klickt, wird 
+die Name der Station angezeigt.</li>
+<li>Aktuelle Verfügbarkeit der Fahrräder pro Station: Diese erfährt man indem man auf die Option 'Aktuell' klickt und wird durch die roten Kreise dargestellt.</br>Daten werden aus der CAB-API entnommen, allerdings ist diese eine Beta-Version. Daher erlaubt die API nur 30 Anfragen pro Minute. Dies muss bei ständiger Änderung der Eingabe-Parametern berücksichtigt werden. Einheit: Fahrräder pro Station.</li>
+<li>Prognostizierte Verfügbarkeit:Wird durch die Größe der blauen Kreisen pro Station dargestellt. Die prognostizierte Anzahl erfährt man indem man auf den blauen Kreis klickt. Prognose wird zum eingegebenen Zeitpunkt und in der Nähe des Eingabeortes berechnet. Einheit: Fahrräder pro Station.
+<ul>
+  <li>Parameter anpassen: Diese Änderung dieser verursacht eine neue Kalkulation der aktuellen (CAB-API) und der prognostizierten Verfügbarkeit.
+  <ul>
+    <li>Radius : Der Nutzer kann mit Hilfe eines Schiebereglers den Radius für die Suche anpassen. Eine Änderung des Radius führt dazu, dass nur die Stationen innerhalb dieses Radius angezeigt werden. Einheit: Meter.</li>
+    <li>Standort : Der Nutzer kann eine beliebige Adresse eingeben.</li>
+    <li>Datum : Fahrräder für die Reservierungen können maximal 4 Tage im Voraus angefragt bzw. gebucht werden.</li>
+    <li>Reservierung : Empfehlung bzw. Keine Empfehlung einer Reservierung in Abhängigkeit der eingegebenen Parameter.</li>
+  </ul>
+</li>
+</ul>
+</li>
+<li>Kostenverhältnis : Misst die Risikoaversion der Nutzer.</li>
+      </ul>"
+
+    })
+  })
+  
 })
 
 
@@ -200,15 +185,16 @@ shinyServer(function(input, output) {
 
 locationToBikes <- function(latitude, longitude, inputTime, radius) {
   # Key used in application is stored locally for security purposes
-  apikey <- "Bearer 97c4f3365b57d92966e97e92e02c4eb4"
-  customRadius <- 500#radius
+  
+  apikey <- Sys.getenv("CALLABIKE_API")
+  customRadius <- radius
   customLimit <- 50
   begin <- as.character(inputTime)
   
   providerNetwork <- 2 # tell API to use Call-a-bike Network
   
   getResults <- GET("https://api.deutschebahn.com/flinkster-api-ng/v1/bookingproposals", 
-                    query = list(lat = latitude, lon = longitude, radius= customRadius,
+                    query = list(lat = latitude, lon = longitude, radius= customRadius, begin=begin,
                                  limit = customLimit, providernetwork = providerNetwork),
                     , add_headers(Accept = "application/json", Authorization = apikey))
   # Get parsed JSON content
@@ -263,12 +249,59 @@ require(e1071)
 library(jsonlite)
 
 #Funktion um die Veränderung an einer Station zu bekommen
-getDelta <- function (lat,lon,futureTime, weatherData, svm.pred, deltaClass, resultType = "delta"){
+getDelta <- function (lat,lon,futureTime, resultType = "delta"){
   #Finde Stationennamen 
   stationName <-  as.character(stations[which.min(abs((stations$RENTAL_ZONE_X_COORDINATE-lat)+abs(stations$RENTAL_ZONE_Y_COORDINATE-lon))),]$RENTAL_ZONE_GROUP)
   stationName <-gsub("-", " ", stationName)
   #Wandle Zeit in entsprechendes Format
   futureTime <- as.POSIXct(futureTime)
+  #Lese SVMSpace ein 
+  SVMspace <- read.csv("/home/r/R/StuttgartSVM.csv", sep=",", stringsAsFactors = FALSE, fileEncoding="UTF-8")
+  rownames(SVMspace) <- SVMspace$X
+  SVMspace <-  SVMspace[colnames(SVMspace)!="X"]
+  SVMspace <- SVMspace[colnames(SVMspace)!="hour"]
+  #Lege einen Data Frame an für die Klassen
+  categories  <-  as.data.frame(SVMspace[,"category"])
+  colnames(categories) <- "category"
+  #Lösche im SVMRaum das Klassenattribut
+  SVMspace <- SVMspace[colnames(SVMspace)!="category"]
+  #Lösche Schnee, da er kaum auswirkungen hat
+  SVMspace <- SVMspace[colnames(SVMspace)!="SNWD"]
+  print(stationName)
+  print(futureTime)
+  #Lese die Veränderungen pro klasse aus
+  deltaClass <- read.csv("/home/r/R/StuttgartVeränderungKlassen.csv", sep=",", stringsAsFactors = FALSE, fileEncoding="UTF-8")
+  deltaClass <- deltaClass[names(deltaClass)!="X"]
+  colnames(deltaClass)[1:(ncol(deltaClass)-1)] <- substring(colnames(deltaClass)[1:(ncol(deltaClass)-1)],2)
+  colnames(deltaClass) <-gsub("\\.", " ", colnames(deltaClass))
+  deltaClass
+  #Erzeuge url zum Abruf von Wetterdaten
+  url <- "http://api.openweathermap.org/data/2.5/forecast?units=metric&appid=a68fd0d9af55f756ea35eb3f51a4c3b6&q="
+  url <- paste(url,"Stuttgart",sep="") 
+  
+  # Formatiere die Wetterdaten entsprechend
+  # rufe hierbei Wetterdaten als JSON Ojekt ab
+  getContent <- fromJSON(url) # content function will try to parse to R object
+  tmax <- getContent$list$main$temp_max
+  tmin <- getContent$list$main$temp_min
+  tavg <- (tmax-tmin)/2+tmin
+  weatherData <- data.frame(matrix(0, ncol = 7,nrow=nrow(getContent$list)))
+  weatherData$X1 <- as.POSIXct(getContent$list$dt_txt)
+  weatherData$X2 <- as.numeric(strftime(getContent$list$dt_txt, "%H"))
+  weatherData$X3 <- tmax
+  weatherData$X4 <- tmin
+  weatherData$X5 <- tavg
+  weatherData$X6 <- getContent$list$rain$`3h`*8
+  weatherData$X7 <- as.numeric(strftime(weatherData$X1,"%w"))
+  colnames(weatherData)[1] <- "Date"
+  colnames(weatherData)[2] <- "hour"
+  colnames(weatherData)[3:ncol(weatherData)] <- colnames(SVMspace)
+  weatherData$PRCP[is.na(weatherData$PRCP)] <- 0
+  
+  #Erstelle SVM-Model auf Basis der historischen Daten
+  svm.model <- svm(SVMspace, categories[,], kernel="linear")
+  #Klassifiziere aktuelle Wetterdaten
+  svm.pred <-  predict(svm.model, weatherData[,3:ncol(weatherData)])
   #Speicher relevante Wetterdaten (kleiner als die Zeit in der Zukunft)
   forecast <- weatherData[weatherData$Date<=futureTime,]
   #Wie viele Stunden sollen Vorhergesagt werden

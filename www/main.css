@@ -200,3 +200,8 @@ checkbox {
   border-bottom: 1px solid #f01414!important;
   background: #f01414!important;
 }
+.help-panel {
+  border: thin solid #e8e8e8;
+  padding:10px;
+  color: #999;
+}

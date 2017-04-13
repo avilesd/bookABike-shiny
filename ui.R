@@ -1,8 +1,5 @@
-library(shiny)
-library(shinyjs)
 library(leaflet)
-library(ggmap)
-library(httr)
+library(shinyjs)
 shinyUI(fluidPage(
   #useShinyjs(),  # Include shinyjs
   
@@ -51,7 +48,7 @@ shinyUI(fluidPage(
   tags$div(id="removeDiv",
            fluidRow(
              column(6, 
-                    textInput("strasse", "Standort: Straße & Straßennr.", value = "", placeholder = "z.B. Königstraße 1")
+                    textInput("strasse", "Strasse & Strassennr.", value = "", placeholder = "z.B. Königstraße 1")
              ),
              column(6, 
                     selectInput("stadt", "Stadt", c("Stuttgart" = "Stuttgart"), selected = "Stuttgart")
@@ -59,6 +56,7 @@ shinyUI(fluidPage(
              ),
              column(12,
                     textInput("datePicker", "Datum & Uhrzeit", value = as.character(Sys.time())),
+                    
                     actionButton("showApp", "Suchen", class="pull-right"),
                     leafletOutput("mymap")
              )
@@ -72,11 +70,19 @@ shinyUI(fluidPage(
            HTML("</div>"),
            HTML("<div class='col-xs-12 col-sm-5'>"), 
            sliderInput("radius", "Vorhersageradius in Meter", min=200, max=8200, value=800),
+           htmlOutput("helpRadius"),
            HTML("</div>"),
            HTML("<div class='col-xs-12 col-sm-5'>"), 
-           sliderInput("costRatio", "Kostenverhältnis/Risikoaversion", min=0.1, max=5, value=1.8),
+           sliderInput("costRatio", "Kostenverhältnis/Risikoaversion", min=0.1, max=2, value=1.1),
+           htmlOutput("helpRisiko"),
            HTML("</div>"),
            HTML("</div>")
+  ),
+  tags$div(id="help",
+    HTML("<div class='col-xs-12'>"), 
+      actionButton("showHelp", "Anleitung anzeigen", class=""),
+      htmlOutput("helpGeneral"),
+    HTML("</div>")
   ),
   tags$footer(id="footer", tags$p("© FZI Seminar - Gruppe 3"))
   
